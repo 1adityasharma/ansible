@@ -1,0 +1,28 @@
+---
+- name: Install Node.js
+  hosts: dev
+  become: true
+  state: absent
+  vars:
+    node_version: "16.x"
+  tasks:
+    - name: Check if Node.js is installed
+      shell: node -v
+      register: node_version_output
+      ignore_errors: true
+    - name: Install Node.js if not installed
+      when: node_version_output.rc != 0
+      apt:
+        name: "nodejs-{{ node_version }}"
+        update_cache: yes
+      become: true
+    - name: Show installed Node.js and npm versions
+      shell: |
+        node -v
+        npm -v
+      register: node_info
+      changed_when: false
+      when: node_version_output.rc == 0
+    - name: Print installed Node.js and npm versions
+      debug:
+        msg: "{{ node_info.stdout }}"
